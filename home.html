@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Royal canadian mounted police</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0f2027;
+    color:white;
+    overflow-x:hidden;
+    transition:0.4s;
+}
+.light{
+    background:#f4f4f4;
+    color:black;
+}
+
+canvas{
+    position:fixed;
+    top:0;
+    left:0;
+    z-index:-1;
+}
+
+header{
+    padding:20px;
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
+}
+
+.container{
+    text-align:center;
+    margin-top:60px;
+}
+
+input{
+    padding:10px;
+    border:none;
+    border-radius:6px;
+    width:230px;
+}
+
+button{
+    padding:10px 15px;
+    border:none;
+    border-radius:6px;
+    margin-top:10px;
+    cursor:pointer;
+}
+
+.primary{ background:#00c6ff; color:black; }
+
+.card{
+    width:350px;
+    margin:20px auto;
+    padding:20px;
+    border-radius:15px;
+    background:rgba(255,255,255,0.1);
+    backdrop-filter:blur(10px);
+}
+
+.hidden{ display:none; }
+
+.progress{
+    width:100%;
+    background:#555;
+    border-radius:10px;
+    margin-top:10px;
+}
+.progress-bar{
+    height:12px;
+    width:0%;
+    background:#00c6ff;
+    border-radius:10px;
+    transition:2s;
+}
+
+.timeline{
+    text-align:left;
+    font-size:13px;
+    margin-top:15px;
+}
+
+.admin-btn{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#ff9800;
+}
+
+.theme{
+    position:absolute;
+    top:10px;
+    right:10px;
+}
+
+.signature{
+    font-family:cursive;
+    font-size:22px;
+    opacity:0;
+    animation:sign 2s forwards;
+}
+@keyframes sign{
+    to{opacity:1;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<button class="theme" onclick="toggleTheme()">Theme</button>
+
+<header id="title">Royal canadian mounted police</header>
+
+<div id="page1" class="container">
+<h3>Secure Case Inquiry</h3>
+<input type="text" id="caseInput" placeholder="Enter Case ID"><br>
+<button class="primary" onclick="checkCase()">Authenticate</button>
+<p id="error" style="color:red;"></p>
+</div>
+
+<div id="dashboard" class="hidden">
+<div class="card">
+<p><strong>Case ID:</strong> <span id="caseId"></span></p>
+<p><strong>Charge:</strong> <span id="caseCharge"></span></p>
+<p><strong>Name:</strong> <span id="caseName"></span></p>
+
+<p><strong>Status:</strong> Active Investigation</p>
+<div class="progress"><div class="progress-bar" id="bar"></div></div>
+
+<div class="timeline">
+<p>• Case Registered</p>
+<p>• Evidence Collection</p>
+<p>• Officer Assigned</p>
+<p>• Investigation Ongoing</p>
+</div>
+
+<button class="primary" onclick="showOfficer()">View Officer</button>
+
+<div id="officer" class="hidden">
+<p><strong>IO:</strong> Officer Eric C Monti</p>
+<p><strong>Badge:</strong> EMC1978NSIB</p>
+<p class="signature">Eric Monti</p>
+</div>
+</div>
+</div>
+
+<div id="adminPanel" class="hidden">
+<div class="card">
+<h3>Admin Access</h3>
+<input type="password" id="adminPass" placeholder="Password"><br>
+<button class="primary" onclick="adminLogin()">Login</button>
+
+<div id="adminArea" class="hidden">
+<h4>Add Case</h4>
+<input type="text" id="newId" placeholder="Case ID"><br>
+<input type="text" id="newCharge" placeholder="Charge"><br>
+<input type="text" id="newName" placeholder="Name"><br>
+<button class="primary" onclick="addCase()">Add</button>
+</div>
+</div>
+</div>
+
+<button class="admin-btn" onclick="toggleAdmin()">Admin</button>
+
+<script>
+
+// PARTICLE BACKGROUND
+let canvas=document.getElementById("bg");
+let ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+let particles=[];
+for(let i=0;i<80;i++){
+    particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:2});
+}
+function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle="#00c6ff";
+        ctx.fill();
+        p.y+=0.5;
+        if(p.y>canvas.height) p.y=0;
+    });
+    requestAnimationFrame(animate);
+}
+animate();
+
+// CASE STORAGE
+let cases=JSON.parse(localStorage.getItem("nsibUltra"))||{
+    "778249":{charge:"Child pornography",name:"Teresa wisonwski"}
+};
+function save(){localStorage.setItem("nsibUltra",JSON.stringify(cases));}
+
+function checkCase(){
+    let id=document.getElementById("caseInput").value;
+    if(cases[id]){
+        document.getElementById("page1").classList.add("hidden");
+        document.getElementById("dashboard").classList.remove("hidden");
+        document.getElementById("caseId").innerText=id;
+        document.getElementById("caseCharge").innerText=cases[id].charge;
+        document.getElementById("caseName").innerText=cases[id].name;
+        setTimeout(()=>{document.getElementById("bar").style.width="70%";},500);
+    }else{
+        document.getElementById("error").innerText="Invalid Case Number";
+    }
+}
+
+function showOfficer(){
+    document.getElementById("officer").classList.toggle("hidden");
+}
+
+function toggleAdmin(){
+    document.getElementById("adminPanel").classList.toggle("hidden");
+}
+
+function adminLogin(){
+    if(document.getElementById("adminPass").value==="nsibadmin"){
+        document.getElementById("adminArea").classList.remove("hidden");
+    }else alert("Wrong Password");
+}
+
+function addCase(){
+    let id=newId.value;
+    let charge=newCharge.value;
+    let name=newName.value;
+    if(id && charge && name){
+        cases[id]={charge,name};
+        save();
+        alert("Case Added");
+    }
+}
+
+function toggleTheme(){
+    document.body.classList.toggle("light");
+}
+</script>
+
+</body>
+</html>
